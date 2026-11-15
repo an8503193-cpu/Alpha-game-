@@ -1,0 +1,355 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        ('email' in request.auth.token && request.auth.token.email == 'an8503193@gmail.com' && 'email_verified' in request.auth.token && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.pseudo is string && data.pseudo.size() >= 2 && data.pseudo.size() <= 30 &&
+        data.level is int && data.level >= 1 && data.level <= 500 &&
+        data.xp is int && data.xp >= 0 && data.xp <= 10000000 &&
+        data.quizCoins is int && data.quizCoins >= 0 && data.quizCoins <= 10000000 &&
+        (!('avatarId' in data) || (data.avatarId is string && data.avatarId.size() <= 64)) &&
+        (!('frameId' in data) || (data.frameId is string && data.frameId.size() <= 64)) &&
+        (!('themeId' in data) || (data.themeId is string && data.themeId.size() <= 64)) &&
+        (!('titleId' in data) || (data.titleId is string && data.titleId.size() <= 64)) &&
+        (!('division' in data) || (data.division is string && data.division.size() <= 32)) &&
+        (!('country' in data) || (data.country is string && data.country.size() <= 32)) &&
+        (!('wins' in data) || (data.wins is int && data.wins >= 0)) &&
+        (!('gamesPlayed' in data) || (data.gamesPlayed is int && data.gamesPlayed >= 0)) &&
+        (!('correctAnswers' in data) || (data.correctAnswers is int && data.correctAnswers >= 0)) &&
+        (!('totalAnswers' in data) || (data.totalAnswers is int && data.totalAnswers >= 0)) &&
+        (!('bestScore' in data) || (data.bestScore is int && data.bestScore >= 0)) &&
+        (!('streakDays' in data) || (data.streakDays is int && data.streakDays >= 0)) &&
+        (!('lastLoginDate' in data) || (data.lastLoginDate is string && data.lastLoginDate.size() <= 32)) &&
+        (!('isPublic' in data) || data.isPublic is bool) &&
+        (!('showStats' in data) || data.showStats is bool) &&
+        (!('allowInvites' in data) || data.allowInvites is bool) &&
+        (!('reactionsEnabled' in data) || data.reactionsEnabled is bool) &&
+        (!('isMinorSafe' in data) || data.isMinorSafe is bool);
+    }
+
+    function isValidPrivateInfo(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 160));
+    }
+
+    function isValidMatchHistory(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+        data.mode is string && data.mode.size() >= 1 && data.mode.size() <= 40 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 64 &&
+        data.score is int && data.score >= 0 && data.score <= 100000 &&
+        data.rank is int && data.rank >= 1 && data.rank <= 20 &&
+        data.correctCount is int && data.correctCount >= 0 && data.correctCount <= 200 &&
+        data.totalCount is int && data.totalCount >= 1 && data.totalCount <= 200;
+    }
+
+    function isValidReviewItem(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+        data.questionId is string && data.questionId.size() >= 1 && data.questionId.size() <= 128 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 64 &&
+        data.missedCount is int && data.missedCount >= 0 && data.missedCount <= 10000 &&
+        data.isFavorite is bool;
+    }
+
+    function isValidMission(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+        data.missionKey is string && data.missionKey.size() >= 1 && data.missionKey.size() <= 64 &&
+        data.period is string && data.period in ['daily', 'weekly'] &&
+        data.progress is int && data.progress >= 0 &&
+        data.target is int && data.target >= 1 &&
+        data.claimed is bool;
+    }
+
+    function isValidGameRoom(data) {
+      return data.roomCode is string && data.roomCode.size() == 6 &&
+        data.hostId is string && data.hostId.size() >= 1 && data.hostId.size() <= 128 &&
+        data.mode is string && data.mode.size() >= 1 && data.mode.size() <= 32 &&
+        data.status in ['waiting', 'active', 'finished'] &&
+        data.maxPlayers is int && data.maxPlayers >= 2 && data.maxPlayers <= 6 &&
+        data.participantIds is list && data.participantIds.size() >= 1 && data.participantIds.size() <= 6 &&
+        (data.participantIds[0] is string) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 64)) &&
+        (!('difficulty' in data) || (data.difficulty is string && data.difficulty.size() <= 32)) &&
+        (!('questionCount' in data) || (data.questionCount is int && data.questionCount >= 5 && data.questionCount <= 100)) &&
+        (!('timePerQuestionSec' in data) || (data.timePerQuestionSec is int && data.timePerQuestionSec >= 0 && data.timePerQuestionSec <= 60)) &&
+        (!('currentQuestionIndex' in data) || (data.currentQuestionIndex is int && data.currentQuestionIndex >= 0)) &&
+        (!('questionIds' in data) || (data.questionIds is list && data.questionIds.size() <= 100));
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.pseudo is string && data.pseudo.size() >= 2 && data.pseudo.size() <= 30 &&
+        data.division is string && data.division.size() >= 1 && data.division.size() <= 32 &&
+        data.seasonPoints is int && data.seasonPoints >= 0 && data.seasonPoints <= 10000000 &&
+        (!('weeklyPoints' in data) || (data.weeklyPoints is int && data.weeklyPoints >= 0)) &&
+        (!('monthlyPoints' in data) || (data.monthlyPoints is int && data.monthlyPoints >= 0)) &&
+        (!('wins' in data) || (data.wins is int && data.wins >= 0)) &&
+        (!('country' in data) || (data.country is string && data.country.size() <= 32)) &&
+        (!('avatarId' in data) || (data.avatarId is string && data.avatarId.size() <= 64));
+    }
+
+    function isValidChallenge(data) {
+      return data.senderId is string && data.senderId.size() <= 128 &&
+        data.receiverId is string && data.receiverId.size() <= 128 &&
+        data.participantIds is list && data.participantIds.size() == 2 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 64 &&
+        data.status in ['pending', 'accepted', 'declined', 'completed'] &&
+        (!('difficulty' in data) || (data.difficulty is string && data.difficulty.size() <= 32)) &&
+        (!('questionCount' in data) || (data.questionCount is int && data.questionCount >= 5 && data.questionCount <= 100)) &&
+        (!('senderScore' in data) || (data.senderScore is int && data.senderScore >= 0)) &&
+        (!('receiverScore' in data) || (data.receiverScore is int && data.receiverScore >= 0));
+    }
+
+    function isValidFriendship(data) {
+      return data.requesterId is string && data.requesterId.size() <= 128 &&
+        data.userIds is list && data.userIds.size() == 2 &&
+        data.status in ['pending', 'accepted', 'blocked'];
+    }
+
+    function isValidReport(data) {
+      return data.reporterId is string && data.reporterId == request.auth.uid &&
+        data.targetId is string && data.targetId.size() >= 1 && data.targetId.size() <= 128 &&
+        data.reason is string && data.reason.size() >= 3 && data.reason.size() <= 300 &&
+        data.status in ['open', 'reviewed', 'resolved'];
+    }
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && request.auth.uid == adminId;
+      allow list, write: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (
+        request.auth.uid == userId || existing().isPublic == true || isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || resource.data.isPublic == true || isAdmin()
+      );
+      allow create: if isSignedIn() && isValidId(userId) &&
+        request.auth.uid == userId &&
+        incoming().userId == request.auth.uid &&
+        incoming().keys().hasAll(['userId', 'pseudo', 'level', 'xp', 'quizCoins', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'userId', 'pseudo', 'avatarId', 'frameId', 'themeId', 'titleId', 'level', 'xp', 'quizCoins',
+          'wins', 'gamesPlayed', 'correctAnswers', 'totalAnswers', 'bestScore', 'streakDays', 'lastLoginDate',
+          'division', 'country', 'isPublic', 'showStats', 'allowInvites', 'reactionsEnabled', 'isMinorSafe',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidTimestamp(incoming().updatedAt) &&
+        isValidUserProfile(incoming());
+      allow update: if isSignedIn() && isValidId(userId) && (
+        isAdmin() || (
+          request.auth.uid == userId &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidUserProfile(incoming()) &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'pseudo', 'avatarId', 'frameId', 'themeId', 'titleId', 'level', 'xp', 'quizCoins',
+            'wins', 'gamesPlayed', 'correctAnswers', 'totalAnswers', 'bestScore', 'streakDays', 'lastLoginDate',
+            'division', 'country', 'isPublic', 'showStats', 'allowInvites', 'reactionsEnabled', 'isMinorSafe',
+            'updatedAt'
+          ])
+        )
+      );
+      allow delete: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+
+      match /private/{docId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && isValidId(docId) && request.auth.uid == userId &&
+          incoming().userId == request.auth.uid &&
+          isValidTimestamp(incoming().createdAt) &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidPrivateInfo(incoming());
+        allow update: if isSignedIn() && isValidId(docId) && request.auth.uid == userId &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidPrivateInfo(incoming());
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /history/{matchId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && isValidId(matchId) && request.auth.uid == userId &&
+          incoming().userId == request.auth.uid &&
+          isValidTimestamp(incoming().createdAt) &&
+          isValidMatchHistory(incoming());
+        allow update, delete: if isSignedIn() && request.auth.uid == userId && isAdmin();
+      }
+
+      match /review_items/{questionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && isValidId(questionId) && request.auth.uid == userId &&
+          incoming().userId == request.auth.uid &&
+          isValidTimestamp(incoming().createdAt) &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidReviewItem(incoming());
+        allow update: if isSignedIn() && isValidId(questionId) && request.auth.uid == userId &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidReviewItem(incoming());
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /missions/{missionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && isValidId(missionId) && request.auth.uid == userId &&
+          incoming().userId == request.auth.uid &&
+          isValidTimestamp(incoming().createdAt) &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidMission(incoming());
+        allow update: if isSignedIn() && isValidId(missionId) && request.auth.uid == userId &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidMission(incoming());
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    match /rooms/{roomId} {
+      allow get: if isSignedIn() && isValidId(roomId) && (
+        request.auth.uid in existing().participantIds || existing().status == 'waiting' || isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        request.auth.uid in resource.data.participantIds || resource.data.status == 'waiting' || isAdmin()
+      );
+      allow create: if isSignedIn() && isValidId(roomId) &&
+        incoming().hostId == request.auth.uid &&
+        request.auth.uid in incoming().participantIds &&
+        incoming().status == 'waiting' &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidTimestamp(incoming().updatedAt) &&
+        isValidGameRoom(incoming());
+      allow update: if isSignedIn() && isValidId(roomId) &&
+        isValidGameRoom(incoming()) &&
+        incoming().hostId == existing().hostId &&
+        incoming().roomCode == existing().roomCode &&
+        incoming().createdAt == existing().createdAt &&
+        isValidTimestamp(incoming().updatedAt) && (
+          isAdmin() ||
+          (
+            existing().status == 'waiting' &&
+            request.auth.uid in incoming().participantIds &&
+            incoming().participantIds.size() <= existing().maxPlayers &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['participantIds', 'participants', 'updatedAt'])
+          ) ||
+          (
+            existing().status != 'finished' &&
+            request.auth.uid in existing().participantIds &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'participants', 'participantIds', 'currentQuestionIndex', 'questionIds', 'reactions', 'messages', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(roomId) && (existing().hostId == request.auth.uid || isAdmin());
+    }
+
+    match /leaderboard/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(userId) &&
+        request.auth.uid == userId &&
+        incoming().userId == request.auth.uid &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidTimestamp(incoming().updatedAt) &&
+        isValidLeaderboardEntry(incoming());
+      allow update: if isSignedIn() && isValidId(userId) && (
+        isAdmin() || (
+          request.auth.uid == userId &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          isValidTimestamp(incoming().updatedAt) &&
+          isValidLeaderboardEntry(incoming())
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /challenges/{challengeId} {
+      allow get: if isSignedIn() && isValidId(challengeId) && (request.auth.uid in existing().participantIds || isAdmin());
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participantIds || isAdmin());
+      allow create: if isSignedIn() && isValidId(challengeId) &&
+        incoming().senderId == request.auth.uid &&
+        request.auth.uid in incoming().participantIds &&
+        incoming().status == 'pending' &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidTimestamp(incoming().updatedAt) &&
+        isValidChallenge(incoming());
+      allow update: if isSignedIn() && isValidId(challengeId) &&
+        isValidChallenge(incoming()) &&
+        incoming().senderId == existing().senderId &&
+        incoming().receiverId == existing().receiverId &&
+        incoming().createdAt == existing().createdAt &&
+        isValidTimestamp(incoming().updatedAt) &&
+        existing().status != 'completed' &&
+        (request.auth.uid in existing().participantIds || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'senderScore', 'receiverScore', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(challengeId) && (existing().senderId == request.auth.uid || isAdmin());
+    }
+
+    match /friendships/{friendshipId} {
+      allow get: if isSignedIn() && isValidId(friendshipId) && (request.auth.uid in existing().userIds || isAdmin());
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.userIds || isAdmin());
+      allow create: if isSignedIn() && isValidId(friendshipId) &&
+        incoming().requesterId == request.auth.uid &&
+        request.auth.uid in incoming().userIds &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidTimestamp(incoming().updatedAt) &&
+        isValidFriendship(incoming());
+      allow update: if isSignedIn() && isValidId(friendshipId) &&
+        isValidFriendship(incoming()) &&
+        incoming().requesterId == existing().requesterId &&
+        incoming().userIds == existing().userIds &&
+        incoming().createdAt == existing().createdAt &&
+        isValidTimestamp(incoming().updatedAt) &&
+        (request.auth.uid in existing().userIds || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(friendshipId) && (request.auth.uid in existing().userIds || isAdmin());
+    }
+
+    match /reports/{reportId} {
+      allow get, list: if isAdmin() || (isSignedIn() && resource.data.reporterId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(reportId) &&
+        incoming().reporterId == request.auth.uid &&
+        incoming().status == 'open' &&
+        isValidTimestamp(incoming().createdAt) &&
+        isValidReport(incoming());
+      allow update: if isAdmin() && isValidId(reportId) && isValidReport(incoming());
+      allow delete: if isAdmin();
+    }
+  }
+}

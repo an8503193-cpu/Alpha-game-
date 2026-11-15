@@ -1,0 +1,224 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public player profile, progression, QuizCoins, and preferences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "pseudo": { "type": "string" },
+        "avatarId": { "type": "string" },
+        "frameId": { "type": "string" },
+        "themeId": { "type": "string" },
+        "titleId": { "type": "string" },
+        "level": { "type": "integer" },
+        "xp": { "type": "integer" },
+        "quizCoins": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "gamesPlayed": { "type": "integer" },
+        "correctAnswers": { "type": "integer" },
+        "totalAnswers": { "type": "integer" },
+        "bestScore": { "type": "integer" },
+        "streakDays": { "type": "integer" },
+        "lastLoginDate": { "type": "string" },
+        "division": { "type": "string" },
+        "country": { "type": "string" },
+        "isPublic": { "type": "boolean" },
+        "showStats": { "type": "boolean" },
+        "allowInvites": { "type": "boolean" },
+        "reactionsEnabled": { "type": "boolean" },
+        "isMinorSafe": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "pseudo", "level", "xp", "quizCoins", "createdAt", "updatedAt"]
+    },
+    "PrivateUserInfo": {
+      "title": "PrivateUserInfo",
+      "description": "Owner-only PII record for a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "createdAt", "updatedAt"]
+    },
+    "MatchHistory": {
+      "title": "MatchHistory",
+      "description": "Completed match summary for player statistics",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "mode": { "type": "string" },
+        "category": { "type": "string" },
+        "score": { "type": "integer" },
+        "rank": { "type": "integer" },
+        "correctCount": { "type": "integer" },
+        "totalCount": { "type": "integer" },
+        "xpEarned": { "type": "integer" },
+        "coinsEarned": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "mode", "category", "score", "rank", "correctCount", "totalCount", "createdAt"]
+    },
+    "ReviewItem": {
+      "title": "ReviewItem",
+      "description": "Missed or favorited question stored for revision mode",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "category": { "type": "string" },
+        "missedCount": { "type": "integer" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "questionId", "category", "missedCount", "isFavorite", "createdAt", "updatedAt"]
+    },
+    "MissionProgress": {
+      "title": "MissionProgress",
+      "description": "Daily or weekly mission progress",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "missionKey": { "type": "string" },
+        "period": { "type": "string" },
+        "progress": { "type": "integer" },
+        "target": { "type": "integer" },
+        "claimed": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "missionKey", "period", "progress", "target", "claimed", "createdAt", "updatedAt"]
+    },
+    "GameRoom": {
+      "title": "GameRoom",
+      "description": "Multiplayer quiz room supporting 2 or 3 players, team, and spectator modes",
+      "type": "object",
+      "properties": {
+        "roomCode": { "type": "string" },
+        "hostId": { "type": "string" },
+        "mode": { "type": "string" },
+        "category": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "questionCount": { "type": "integer" },
+        "timePerQuestionSec": { "type": "integer" },
+        "status": { "type": "string", "enum": ["waiting", "active", "finished"] },
+        "maxPlayers": { "type": "integer" },
+        "participantIds": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomCode", "hostId", "mode", "status", "maxPlayers", "participantIds", "createdAt", "updatedAt"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Competitive ranking entry for global, country, weekly, and monthly boards",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "pseudo": { "type": "string" },
+        "avatarId": { "type": "string" },
+        "division": { "type": "string" },
+        "country": { "type": "string" },
+        "seasonPoints": { "type": "integer" },
+        "weeklyPoints": { "type": "integer" },
+        "monthlyPoints": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "pseudo", "division", "seasonPoints", "createdAt", "updatedAt"]
+    },
+    "FriendChallenge": {
+      "title": "FriendChallenge",
+      "description": "Direct challenge or rematch between two friends",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "participantIds": { "type": "array" },
+        "category": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "questionCount": { "type": "integer" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined", "completed"] },
+        "senderScore": { "type": "integer" },
+        "receiverScore": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "receiverId", "participantIds", "category", "status", "createdAt", "updatedAt"]
+    },
+    "Friendship": {
+      "title": "Friendship",
+      "description": "Bidirectional friend connection or pending invite",
+      "type": "object",
+      "properties": {
+        "requesterId": { "type": "string" },
+        "userIds": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "blocked"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["requesterId", "userIds", "status", "createdAt", "updatedAt"]
+    },
+    "ModerationReport": {
+      "title": "ModerationReport",
+      "description": "Safety report submitted by a user",
+      "type": "object",
+      "properties": {
+        "reporterId": { "type": "string" },
+        "targetId": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reporterId", "targetId", "reason", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and progression"
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/PrivateUserInfo" },
+      "description": "Owner-only PII record"
+    },
+    "/users/{userId}/history/{matchId}": {
+      "schema": { "$ref": "#/entities/MatchHistory" },
+      "description": "Player match history"
+    },
+    "/users/{userId}/review_items/{questionId}": {
+      "schema": { "$ref": "#/entities/ReviewItem" },
+      "description": "Missed or favorited review items"
+    },
+    "/users/{userId}/missions/{missionId}": {
+      "schema": { "$ref": "#/entities/MissionProgress" },
+      "description": "Daily and weekly mission progress"
+    },
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/GameRoom" },
+      "description": "Multiplayer quiz rooms"
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Competitive leaderboard entries"
+    },
+    "/challenges/{challengeId}": {
+      "schema": { "$ref": "#/entities/FriendChallenge" },
+      "description": "Friend quiz challenges"
+    },
+    "/friendships/{friendshipId}": {
+      "schema": { "$ref": "#/entities/Friendship" },
+      "description": "Friendships and friend requests"
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ModerationReport" },
+      "description": "Moderation reports"
+    }
+  }
+}

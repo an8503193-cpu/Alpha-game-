@@ -1,0 +1,6 @@
+{
+  "name": "QuizFriend",
+  "description": "Application de quiz multijoueur moderne : duels en temps réel, classements, Coach IA, défis entre amis et progression.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
